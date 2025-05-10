@@ -1,0 +1,49 @@
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import classification_report, accuracy_score
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.preprocessing import LabelEncoder
+
+# Load dataset
+data = pd.read_excel("/content/final dataset.xlsx")  # Using the uploaded dataset
+
+# Combine text and hashtag for feature extraction
+data['combined_text'] = data['Text'] + ' ' + data['hashtag']
+
+# Features and labels
+X_text = data['combined_text']
+y = data['Sentiment']
+
+# Convert text to TF-IDF features
+vectorizer = TfidfVectorizer()
+X = vectorizer.fit_transform(X_text)
+
+# Encode sentiment labels
+label_encoder = LabelEncoder()
+y_encoded = label_encoder.fit_transform(y)
+
+# Train-test split
+X_train, X_test, y_train, y_test = train_test_split(X, y_encoded, test_size=0.2, random_state=42)
+
+# Train Decision Tree model
+model = DecisionTreeClassifier()
+model.fit(X_train, y_train)
+
+# Evaluate model
+y_pred = model.predict(X_test)
+y_test_labels = label_encoder.inverse_transform(y_test)
+y_pred_labels = label_encoder.inverse_transform(y_pred)
+
+print("\nClassification Report:")
+print(classification_report(y_test_labels, y_pred_labels))
+print("Accuracy Score:", accuracy_score(y_test_labels, y_pred_labels))
+
+# Predict sentiment from new input considering both text and hashtag
+new_text = ["Thank goodness it's over.#sad"]
+new_vector = vectorizer.transform(new_text)
+predicted = model.predict(new_vector)
+predicted_label = label_encoder.inverse_transform(predicted)
+
+print("\nInput Text:", new_text[0])
+print("Predicted Sentiment:", predicted_label[0])
